@@ -6,6 +6,7 @@ public class Localizer implements EstimatorInterface {
 		
 	private int rows, cols, head;
 	private final double ploc = 0.1, pn1 = 0.05, pn2 = 0.025;
+	private final double NORTH = 1, EAST = 2, SOUTH = 3, WEST = 4;
 	private double[][][] state;
 
 	public Localizer( int rows, int cols, int head) {
@@ -58,8 +59,8 @@ public class Localizer implements EstimatorInterface {
 	}
 	
 	public void update() {
-		System.out.println("Nothing is happening, no model to go for...");
+
 	}
 	
-	
+	//forward-backward (page 576)	
 }
