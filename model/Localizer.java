@@ -2,15 +2,18 @@ package model;
 
 import control.EstimatorInterface;
 
-public class DummyLocalizer implements EstimatorInterface {
+public class Localizer implements EstimatorInterface {
 		
 	private int rows, cols, head;
+	private final double ploc = 0.1, pn1 = 0.05, pn2 = 0.025;
+	private double[][][] state;
 
-	public DummyLocalizer( int rows, int cols, int head) {
+	public Localizer( int rows, int cols, int head) {
 		this.rows = rows;
 		this.cols = cols;
 		this.head = head;
 		
+		state = new double[rows][cols][head];
 	}	
 	
 	public int getNumRows() {
