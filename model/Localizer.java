@@ -12,11 +12,14 @@ public class Localizer implements EstimatorInterface {
 	private final int NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3;
 	private double[][][] state;
 	private int currentDirection;
+	private RobotSim rob;
 
 	public Localizer( int rows, int cols, int head) {
 		this.rows = rows;
 		this.cols = cols;
 		this.head = head;
+
+		rob = new RobotSim();
 		
 		state = new double[rows][cols][head];
 		for (int i = 0; i < rows; i++) {
@@ -99,17 +102,28 @@ public class Localizer implements EstimatorInterface {
 	}
 
 	public int[] getCurrentReading() {
-		int[] ret = null;
-		return ret;
+		return rob.getCurrentReading();
 	}
 
 
 	public double getCurrentProb( int x, int y) {
-		double ret = 0.0;
-		return ret;
+		double prob = 0.0;
+		for (int i = 0; i < head; i++) {
+			prob += state[x][y][i];
+		}
+		return prob;
 	}
-	
+
+	// todo
 	public void update() {
+		// rob.move();
+		// getCurrentReading();
+		// forward();
+		// calcuate manhattan distance
+	}
+
+	// todo
+	private void forward() {
 
 	}
 	
