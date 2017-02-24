@@ -43,10 +43,6 @@ public class Localizer implements EstimatorInterface {
 		return head;
 	}
 	
-	/*
-	 * returns the probability entry (Tij) of the transition matrix T to go from pose 
-	 * i = (x, y, h) to pose j = (nX, nY, nH)
-	 */	
 	public double getTProb( int x, int y, int h, int nX, int nY, int nH) {
 		// Entered a wall
 		if (nX < 0 || nX >= cols || nY < 0 || nY >= rows) return 0.0;
