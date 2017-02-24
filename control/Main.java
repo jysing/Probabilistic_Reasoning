@@ -1,6 +1,6 @@
 package control;
 
-import model.DummyLocalizer;
+import model.Localizer;
 import view.RobotLocalizationViewer;
 
 public class Main {

@@ -18,8 +18,8 @@ public class RobotSim {
 	}
 
 	// todo
-	public void getCurrentReading() {
-
+	public int[] getCurrentReading() {
+		return null;
 	}
 
 	// todo

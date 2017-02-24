@@ -80,11 +80,7 @@ public class Localizer implements EstimatorInterface {
 			case (WEST) : deltaX = -1;
 		}
 
-		if (x+deltaX < 0 || x+deltaX >= cols || y+deltaX < 0 || y+deltaY >= rows) {
-			return true;
-		} else {
-			return false;
-		}
+		return (x+deltaX < 0 || x+deltaX >= cols || y+deltaX < 0 || y+deltaY >= rows);
 	}
 
 	public double getOrXY( int rX, int rY, int x, int y) {
