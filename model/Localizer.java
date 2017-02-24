@@ -61,7 +61,6 @@ public class Localizer implements EstimatorInterface {
 			if (nextIsWall(nX,nY,h)) return 0.0;
 			else return 0.7;
 		} else {
-			//tree alternatives
 			if (!nextIsWall(nX,nY,h)) return 0.3;
 			else {
 				int walls = 0;
