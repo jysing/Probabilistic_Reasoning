@@ -15,7 +15,7 @@ public class Localizer implements EstimatorInterface {
 	private double[][][] state;
 	private double[][][][][][] t;
 	// Not pretty using ArrayList here, but practical. Ev here is all readings.
-	private ArrayList<int[][]> ev;
+	private ArrayList<int[]> ev;
 
 	public Localizer( int rows, int cols, int head) {
 		this.rows = rows;
@@ -144,47 +144,127 @@ public class Localizer implements EstimatorInterface {
 	// todo
 	public void update() {
 		// rob.move();
+		rob.move();
 		// getCurrentReading();
+		ev.add(rob.getCurrentReading());
 		// forwardBackward();
+		ArrayList<double[][][]> sv = forwardBackward();
+		state = sv.get(0);
 		// calcuate manhattan distance
 	}
 
-	// todo
-	private void forwardBackward() {
+	private ArrayList<double[][][]> forwardBackward(){
+		ArrayList<double[][][]> sv = new ArrayList<double[][][]>();
+		ArrayList<double[][][]> fv = new ArrayList<double[][][]>();
 
+		//The prior distribution of the initial state
+		double[][][] prior = new double[cols][rows][head];
+		for(int x = 0; x < cols; x++){
+			for(int y = 0; y < rows; y++){
+				for(int h = 0; h < head; h++){
+					prior[x][y][h] = 1/(cols + rows + head);
+				}
+			}
+		}
+		fv.add(prior);
+
+		for(int i = 0; i < ev.size(); i++){
+			int[] currentE = ev.get(i);
+			double[][] o = generateO(currentE[0], currentE[1]);
+			double[][][] newF = forward(fv.get(i), o);
+			fv.add(newF);
+		}
+
+		//Initial values in b should be set to one according to algorithm
+		double[][][] b = new double[cols][rows][head];
+		for(int x = 0; x < cols; x++){
+			for(int y = 0; y < rows; y++){
+				for(int h = 0; h < head; h++){
+					b[x][y][h] = 1;
+				}
+			}
+		}
+
+		for(int i = ev.size()-1; i >= 1; i--){
+			double[][][] newS = multStates(fv.get(i+1), b);
+			newS = normalize(newS);
+			sv.add(0, newS);
+			int[] currentE = ev.get(i);
+			double[][] o = generateO(currentE[0], currentE[1]);
+			b = backward(b, o);
+		}
+		return sv;
 	}
 
 	//Should (fingers crossed) implement 15.12
 	private double[][][] forward(double[][][] oldF, double[][] o){
 		double[][][] newF = new double[cols][rows][head];
-		double totUnscProb = 0;
 		for(int x = 0; x < cols; x++){
 			for(int y = 0; y < rows; x++){
 				for(int h = 0; h < head; h++){
 					// From here we calculate the probability of the state [x,y,h]
-					double unscProb = 0.0;
 					for(int nX = 0; nX < cols; nX++){
 						for(int nY = 0; nY < rows; nY++){
 							for(int nH = 0; nH < head; nH++){
-								unscProb += oldF[x][y][h]*o[x][y]*t[x][y][h][nX][nY][nH];
+								newF[x][y][h] += oldF[x][y][h]*o[x][y]*t[x][y][h][nX][nY][nH];
 							}
 						}
 					}
-					newF[x][y][h] = unscProb;
-					totUnscProb += unscProb;
-				}
-			}
-		}
-
-		//The "forward-message" is scaled.
-		for(int x = 0; x < cols; x++){
-			for(int y = 0; y < rows; y++){
-				for(int h = 0; h < head; h++){
-					newF[x][y][h] /= totUnscProb;
 				}
 			}
 		}
 		return newF;
+	}
+
+	private double[][][] backward(double[][][] oldB, double[][] o){
+		double newB = new double[cols][rows][head];
+		for(int x = 0; x < cols; x++){
+			for(int y = 0; y < rows; y++){
+				for(int h = 0; h < head; h++){
+					//Sum up all probability terms for state [x,y,h]
+					for(int nX = 0; nX < cols; nX++){
+						for(int nY = 0; nY < rows; nY++){
+							for(int nH = 0; nH < head; nH++){
+								//Unsure if this is the correct iteration over t (see formula 15.13)
+								newB[x][y][h] += t[x][y][h][nX][nY][nH]*o[x][y]*oldB[x][y][h];
+							}
+						}
+					}
+				}
+			}
+		}
+		return newB;
+	}
+
+	private double[][][] normalize(double[][][] a){
+		double totProb = 0.0;
+		for(int x = 0; x < cols; x++){
+			for(int y = 0; y < rows; y++){
+				for(int h = 0; h < head; h++){
+					totProb += a[x][y][h];
+				}
+			}
+		}
+		for(int x = 0; x < cols; x++){
+			for(int y = 0; y < rows; y++){
+				for(int h = 0; h < head; h++){
+					a[x][y][h] /= totProb;
+				}
+			}
+		}
+		return a;
+	}
+
+	private double[][][] multStates(double[][][] a, double[][][] b){
+		double[][][] ret = new double[cols][rows][head];
+		for(int x = 0; x < cols; x++){
+			for(int y = 0; y < rows; y++){
+				for(int h = 0; h < head; h++){
+					ret[x][y][h] = a[x][y][h]*b[x][y][h];
+				}
+			}
+		}
+		return ret;
 	}
 
 	//Looks horrendous and is not a matrix, hopefully works. Gets generated once.
