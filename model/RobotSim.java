@@ -70,35 +70,35 @@ public class RobotSim {
 	public void move() {
 		updateDirection();
 		makeMove();
-		return;
 	}
 
 	private boolean wallAhead(){
 		switch(h){
 			case NORTH:
-				return allowedPos(x, y - 1);
+				return !allowedPos(x, y - 1);
 			case EAST:
-				return allowedPos(x + 1, y);
+				return !allowedPos(x + 1, y);
 			case SOUTH:
-				return allowedPos(x, y + 1);
+				return !allowedPos(x, y + 1);
 			case WEST:
-				return allowedPos(x - 1, y);
+				return !allowedPos(x - 1, y);
 			//Undefined behaviour
 			default: return false;
 		}
 	}
 
+	//nextInt(4) gives possible values 0,1,2,3
 	private void updateDirection(){
 		if(wallAhead()){
 			do{
-				h = rngGen.nextInt(3);
+				h = rngGen.nextInt(4);
 			}while(wallAhead());
 		}
 		else{
 			if(rngGen.nextDouble() <= 0.3){
 				int hOld = h;
 				do{
-					h = rngGen.nextInt(3);
+					h = rngGen.nextInt(4);
 				}while(wallAhead() || hOld == h);
 			}
 		}
