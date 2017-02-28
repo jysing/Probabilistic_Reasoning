@@ -209,8 +209,9 @@ public class Localizer implements EstimatorInterface {
 	private double[][][] forward(double[][][] oldF, double[][] o){
 		double[][][] newF = new double[cols][rows][head];
 		for(int x = 0; x < cols; x++){
-			for(int y = 0; y < rows; x++){
+			for(int y = 0; y < rows; y++){
 				for(int h = 0; h < head; h++){
+					newF[x][y][h] = 0;
 					// From here we calculate the probability of the state [x,y,h]
 					for(int nX = 0; nX < cols; nX++){
 						for(int nY = 0; nY < rows; nY++){
