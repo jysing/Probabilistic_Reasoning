@@ -66,7 +66,6 @@ public class Localizer implements EstimatorInterface {
 		// Cannot move more than one step
 		if (Math.abs(nX-x) > 1 || Math.abs(nY-y) > 1) return 0.0;
 
-		//BUG PRESENT: 1.0/(head-walls) will return infinity (see GUI)
 		if (h == nH) {
 			if (nextIsWall(nX,nY,h)) return 0.0;
 			else return 0.7;
@@ -85,13 +84,20 @@ public class Localizer implements EstimatorInterface {
 	private boolean nextIsWall(int x, int y, int h) {
 		int deltaX = 0, deltaY = 0;
 		switch (h) {
-			case (NORTH) : deltaY = -1;
-			case (EAST) : deltaX = 1;
-			case (SOUTH) : deltaY = 1;
-			case (WEST) : deltaX = -1;
+			case (NORTH) : 
+				deltaY = -1;
+				break;
+			case (EAST) : 
+				deltaX = 1;
+				break;
+			case (SOUTH) : 
+				deltaY = 1;
+				break;
+			case (WEST) : 
+				deltaX = -1;
+				break;
 		}
-
-		return (x+deltaX < 0 || x+deltaX >= cols || y+deltaX < 0 || y+deltaY >= rows);
+		return (x+deltaX < 0 || x+deltaX >= cols || y+deltaY < 0 || y+deltaY >= rows);
 	}
 
 	public double getOrXY( int rX, int rY, int x, int y) {
@@ -145,12 +151,13 @@ public class Localizer implements EstimatorInterface {
 
 	// todo
 	public void update() {
-		// rob.move();
+		System.out.println("1");
 		rob.move();
-		// getCurrentReading();
+		System.out.println("2");
 		ev.add(rob.getCurrentReading());
-		// forwardBackward();
+		System.out.println("3");
 		ArrayList<double[][][]> sv = forwardBackward();
+		System.out.println("4");
 		state = sv.get(0);
 		// calcuate manhattan distance
 	}

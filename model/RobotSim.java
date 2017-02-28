@@ -96,9 +96,10 @@ public class RobotSim {
 		}
 		else{
 			if(rngGen.nextDouble() <= 0.3){
+				int hOld = h;
 				do{
 					h = rngGen.nextInt(3);
-				}while(wallAhead());
+				}while(wallAhead() || hOld == h);
 			}
 		}
 		return;
