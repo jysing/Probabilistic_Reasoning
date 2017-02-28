@@ -22,7 +22,8 @@ public class Localizer implements EstimatorInterface {
 		this.cols = cols;
 		this.head = head;
 
-		rob = new RobotSim();
+		//Arbitrary start position as of now
+		rob = new RobotSim(rows, cols, head, 1, 1, EAST);
 
 		state = new double[cols][rows][head];
 		for (int i = 0; i < cols; i++) {
@@ -37,7 +38,7 @@ public class Localizer implements EstimatorInterface {
 		currentDirection = rand.nextInt(4);
 
 		t = generateT();
-		ev = new ArrayList<int[][]>();
+		ev = new ArrayList<int[]>();
 	}
 
 	public int getNumRows() {
@@ -65,6 +66,7 @@ public class Localizer implements EstimatorInterface {
 		// Cannot move more than one step
 		if (Math.abs(nX-x) > 1 || Math.abs(nY-y) > 1) return 0.0;
 
+		//BUG PRESENT: 1.0/(head-walls) will return infinity (see GUI)
 		if (h == nH) {
 			if (nextIsWall(nX,nY,h)) return 0.0;
 			else return 0.7;
@@ -83,9 +85,9 @@ public class Localizer implements EstimatorInterface {
 	private boolean nextIsWall(int x, int y, int h) {
 		int deltaX = 0, deltaY = 0;
 		switch (h) {
-			case (NORTH) : deltaY = 1;
+			case (NORTH) : deltaY = -1;
 			case (EAST) : deltaX = 1;
-			case (SOUTH) : deltaY = -1;
+			case (SOUTH) : deltaY = 1;
 			case (WEST) : deltaX = -1;
 		}
 
@@ -93,15 +95,15 @@ public class Localizer implements EstimatorInterface {
 	}
 
 	public double getOrXY( int rX, int rY, int x, int y) {
-		if(rx == -1 || ry == -1){
+		if(rX == -1 || rY == -1){
 			double prob = 1;
 			for(int i = -2; i <= 2; i++){
 				for(int j = -2; j <= 2; j++){
 					if(allowedPos(x+i, y+j)){
-						if(abs(i) == 2 || abs(j) == 2){
+						if(Math.abs(i) == 2 || Math.abs(j) == 2){
 							prob-= pn2;
 						}
-						else if(abs(i) == 1 || abs(j) == 1){
+						else if(Math.abs(i) == 1 || Math.abs(j) == 1){
 							prob =- pn1;
 						}
 						else{ 	//i = j = 0
@@ -113,9 +115,9 @@ public class Localizer implements EstimatorInterface {
 		return prob;
 		}
 		else{
-			if(abs(rX - x) > 2 || abs(rY - y) > 2) return 0.0;
-			else if(abs(rX - x) == 2 || abs(rY - y) == 2) return pn2;
-			else if(abs(rX - x) == 1 || abs(rY - y) == 1) return pn1;
+			if(Math.abs(rX - x) > 2 || Math.abs(rY - y) > 2) return 0.0;
+			else if(Math.abs(rX - x) == 2 || Math.abs(rY - y) == 2) return pn2;
+			else if(Math.abs(rX - x) == 1 || Math.abs(rY - y) == 1) return pn1;
 			else return ploc;
 		}
 	}
@@ -216,8 +218,9 @@ public class Localizer implements EstimatorInterface {
 		return newF;
 	}
 
+	//Should implement 15.13
 	private double[][][] backward(double[][][] oldB, double[][] o){
-		double newB = new double[cols][rows][head];
+		double[][][] newB = new double[cols][rows][head];
 		for(int x = 0; x < cols; x++){
 			for(int y = 0; y < rows; y++){
 				for(int h = 0; h < head; h++){
@@ -236,6 +239,7 @@ public class Localizer implements EstimatorInterface {
 		return newB;
 	}
 
+	//Normalizes entries in a probability data structure
 	private double[][][] normalize(double[][][] a){
 		double totProb = 0.0;
 		for(int x = 0; x < cols; x++){
@@ -255,6 +259,7 @@ public class Localizer implements EstimatorInterface {
 		return a;
 	}
 
+	//Elementwise multiplication
 	private double[][][] multStates(double[][][] a, double[][][] b){
 		double[][][] ret = new double[cols][rows][head];
 		for(int x = 0; x < cols; x++){
@@ -291,11 +296,12 @@ public class Localizer implements EstimatorInterface {
 	private double[][] generateO(int rX, int rY){
 		double[][] o = new double[cols][rows];
 		for(int i = 0; i < cols; i++){
-			for(int j = 0; j1 < rows; j++){
+			for(int j = 0; j < rows; j++){
 				// Can be interpreted as P(reading [rX, rY] | [x,y])
 				o[i][j] = getOrXY(rX, rY, i, j);
 			}
 		}
+		return o;
 	}
 
 	//forward-backward (page 576)

@@ -12,13 +12,16 @@ public class RobotSim {
 	private int h;
 	private int rows;
 	private int cols;
+	private int head;
 	private Random rngGen;
+	//SOUTH: +y; EAST: +x
 	private final int NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3;
 	private final double ploc = 0.1, pn1 = 0.05, pn2 = 0.025;
 
-	public RobotSim(int rows, int cols, int x, int y, int h){
+	public RobotSim(int rows, int cols, int head, int x, int y, int h){
 		this.rows = rows;
 		this.cols = cols;
+		this.head = head;
 		this.x = x;
 		this.y = y;
 		this.h = h;
@@ -26,7 +29,7 @@ public class RobotSim {
 	}
 
 	public int[] getCurrentPos() {
-		int pos = int[2];
+		int[] pos = new int[2];
 		pos[0] = x;
 		pos[1] = y;
 		return pos;
@@ -39,10 +42,10 @@ public class RobotSim {
 		for(int i = -2; i <= 2; i++){
 			for(int j = -2; j <= 2; j++){
 				if(allowedPos(x+i, y+j)){
-					if(abs(i) == 2 || abs(j) == 2){
+					if(Math.abs(i) == 2 || Math.abs(j) == 2){
 						addRng += pn2;
 					}
-					else if(abs(i) == 1 || abs(j) == 1){
+					else if(Math.abs(i) == 1 || Math.abs(j) == 1){
 						addRng += pn1;
 					}
 					else{ 	//i = j = 0
@@ -80,6 +83,8 @@ public class RobotSim {
 				return allowedPos(x, y + 1);
 			case WEST:
 				return allowedPos(x - 1, y);
+			//Undefined behaviour
+			default: return false;
 		}
 	}
 
@@ -93,7 +98,7 @@ public class RobotSim {
 			if(rngGen.nextDouble() <= 0.3){
 				do{
 					h = rngGen.nextInt(3);
-				}while(wallAhead())
+				}while(wallAhead());
 			}
 		}
 		return;
