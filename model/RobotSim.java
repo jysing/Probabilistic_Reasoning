@@ -14,7 +14,7 @@ public class RobotSim {
 	private int cols;
 	private int head;
 	private Random rngGen;
-	//SOUTH: +y; EAST: +x
+	//SOUTH: +x; EAST: +y
 	private final int NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3;
 	private final double ploc = 0.1, pn1 = 0.05, pn2 = 0.025;
 
@@ -67,7 +67,7 @@ public class RobotSim {
 	}
 
 	private boolean allowedPos(int x, int y){
-		return (x >= 0 && y >= 0 && x < cols && y < rows);
+		return (x >= 0 && y >= 0 && x < rows && y < cols);
 	}
 
 	public void move() {
@@ -78,13 +78,13 @@ public class RobotSim {
 	private boolean wallAhead(){
 		switch(h){
 			case NORTH:
-				return !allowedPos(x, y - 1);
-			case EAST:
-				return !allowedPos(x + 1, y);
-			case SOUTH:
-				return !allowedPos(x, y + 1);
-			case WEST:
 				return !allowedPos(x - 1, y);
+			case EAST:
+				return !allowedPos(x, y + 1);
+			case SOUTH:
+				return !allowedPos(x + 1, y);
+			case WEST:
+				return !allowedPos(x, y - 1);
 			//Undefined behaviour
 			default: return false;
 		}
@@ -111,16 +111,16 @@ public class RobotSim {
 	private void makeMove(){
 		switch(h){
 			case NORTH:
-				y = y - 1;
+				x = x - 1;
 				break;
 			case EAST:
-				x = x + 1;
-				break;
-			case SOUTH:
 				y = y + 1;
 				break;
+			case SOUTH:
+				x = x + 1;
+				break;
 			case WEST:
-				x = x - 1;
+				y = y - 1;
 				break;
 		}
 		return;

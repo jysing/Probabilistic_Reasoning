@@ -25,9 +25,9 @@ public class Localizer implements EstimatorInterface {
 		//Arbitrary start position as of now
 		rob = new RobotSim(rows, cols, head, 1, 1, EAST);
 
-		state = new double[cols][rows][head];
-		for (int i = 0; i < cols; i++) {
-			for (int j = 0; j < rows; j++) {
+		state = new double[rows][cols][head];
+		for (int i = 0; i < rows; i++) {
+			for (int j = 0; j < cols; j++) {
 				for (int k = 0; k < head; k++) {
 					state[i][j][k] = 1.0/(rows*cols*head);
 				}
@@ -54,50 +54,7 @@ public class Localizer implements EstimatorInterface {
 	}
 
 	public double getTProb( int x, int y, int h, int nX, int nY, int nH) {
-		//Must move
-		if(x == nX && y == nY) return 0.0;
-
-		// Entered a wall
-		if (nX < 0 || nX >= cols || nY < 0 || nY >= rows) return 0.0;
-
-		// Cannot move diagonally
-		if (nX - x != 0 && nY - y != 0) return 0.0;
-
-		// Cannot move more than one step
-		if (Math.abs(nX-x) > 1 || Math.abs(nY-y) > 1) return 0.0;
-
-		if (h == nH) {
-			if (nextIsWall(nX,nY,h)) return 0.0;
-			else return 0.7;
-		} else {
-			if (!nextIsWall(nX,nY,h)) return 0.3;
-			else {
-				int walls = 0;
-				for (int i = 0; i < head; i++) {
-					if (nextIsWall(nX,nY,i)) walls++;
-				}
-				return 1.0/(head-walls);
-			}
-		}
-	}
-
-	private boolean nextIsWall(int x, int y, int h) {
-		int deltaX = 0, deltaY = 0;
-		switch (h) {
-			case (NORTH) : 
-				deltaY = -1;
-				break;
-			case (EAST) : 
-				deltaX = 1;
-				break;
-			case (SOUTH) : 
-				deltaY = 1;
-				break;
-			case (WEST) : 
-				deltaX = -1;
-				break;
-		}
-		return (x+deltaX < 0 || x+deltaX >= cols || y+deltaY < 0 || y+deltaY >= rows);
+		return t[x][y][h][nX][nY][nH];
 	}
 
 	public double getOrXY( int rX, int rY, int x, int y) {
@@ -122,7 +79,7 @@ public class Localizer implements EstimatorInterface {
 	}
 
 	private boolean allowedPos(int x, int y){
-		return (x >= 0 && y >= 0 && x < cols && y < rows);
+		return (x >= 0 && y >= 0 && x < rows && y < cols);
 	}
 
 	public int[] getCurrentTruePosition() {
@@ -160,9 +117,9 @@ public class Localizer implements EstimatorInterface {
 		ArrayList<double[][][]> fv = new ArrayList<double[][][]>();
 
 		//The prior distribution of the initial state
-		double[][][] prior = new double[cols][rows][head];
-		for(int x = 0; x < cols; x++){
-			for(int y = 0; y < rows; y++){
+		double[][][] prior = new double[rows][cols][head];
+		for(int x = 0; x < rows; x++){
+			for(int y = 0; y < cols; y++){
 				for(int h = 0; h < head; h++){
 					prior[x][y][h] = 1/(cols + rows + head);
 				}
@@ -178,9 +135,9 @@ public class Localizer implements EstimatorInterface {
 		}
 
 		//Initial values in b should be set to one according to algorithm
-		double[][][] b = new double[cols][rows][head];
-		for(int x = 0; x < cols; x++){
-			for(int y = 0; y < rows; y++){
+		double[][][] b = new double[rows][cols][head];
+		for(int x = 0; x < rows; x++){
+			for(int y = 0; y < cols; y++){
 				for(int h = 0; h < head; h++){
 					b[x][y][h] = 1;
 				}
@@ -200,14 +157,14 @@ public class Localizer implements EstimatorInterface {
 
 	//Should (fingers crossed) implement 15.12
 	private double[][][] forward(double[][][] oldF, double[][] o){
-		double[][][] newF = new double[cols][rows][head];
-		for(int x = 0; x < cols; x++){
-			for(int y = 0; y < rows; y++){
+		double[][][] newF = new double[rows][cols][head];
+		for(int x = 0; x < rows; x++){
+			for(int y = 0; y < cols; y++){
 				for(int h = 0; h < head; h++){
 					newF[x][y][h] = 0;
 					// From here we calculate the probability of the state [x,y,h]
-					for(int nX = 0; nX < cols; nX++){
-						for(int nY = 0; nY < rows; nY++){
+					for(int nX = 0; nX < rows; nX++){
+						for(int nY = 0; nY < cols; nY++){
 							for(int nH = 0; nH < head; nH++){
 								newF[x][y][h] += oldF[x][y][h]*o[x][y]*t[x][y][h][nX][nY][nH];
 							}
@@ -221,13 +178,13 @@ public class Localizer implements EstimatorInterface {
 
 	//Should implement 15.13
 	private double[][][] backward(double[][][] oldB, double[][] o){
-		double[][][] newB = new double[cols][rows][head];
-		for(int x = 0; x < cols; x++){
-			for(int y = 0; y < rows; y++){
+		double[][][] newB = new double[rows][cols][head];
+		for(int x = 0; x < rows; x++){
+			for(int y = 0; y < cols; y++){
 				for(int h = 0; h < head; h++){
 					//Sum up all probability terms for state [x,y,h]
-					for(int nX = 0; nX < cols; nX++){
-						for(int nY = 0; nY < rows; nY++){
+					for(int nX = 0; nX < rows; nX++){
+						for(int nY = 0; nY < cols; nY++){
 							for(int nH = 0; nH < head; nH++){
 								//Unsure if this is the correct iteration over t (see formula 15.13)
 								newB[x][y][h] += t[x][y][h][nX][nY][nH]*o[x][y]*oldB[x][y][h];
@@ -243,15 +200,15 @@ public class Localizer implements EstimatorInterface {
 	//Normalizes entries in a probability data structure
 	private double[][][] normalize(double[][][] a){
 		double totProb = 0.0;
-		for(int x = 0; x < cols; x++){
-			for(int y = 0; y < rows; y++){
+		for(int x = 0; x < rows; x++){
+			for(int y = 0; y < cols; y++){
 				for(int h = 0; h < head; h++){
 					totProb += a[x][y][h];
 				}
 			}
 		}
-		for(int x = 0; x < cols; x++){
-			for(int y = 0; y < rows; y++){
+		for(int x = 0; x < rows; x++){
+			for(int y = 0; y < cols; y++){
 				for(int h = 0; h < head; h++){
 					a[x][y][h] /= totProb;
 				}
@@ -262,9 +219,9 @@ public class Localizer implements EstimatorInterface {
 
 	//Elementwise multiplication
 	private double[][][] multStates(double[][][] a, double[][][] b){
-		double[][][] ret = new double[cols][rows][head];
-		for(int x = 0; x < cols; x++){
-			for(int y = 0; y < rows; y++){
+		double[][][] ret = new double[rows][cols][head];
+		for(int x = 0; x < rows; x++){
+			for(int y = 0; y < cols; y++){
 				for(int h = 0; h < head; h++){
 					ret[x][y][h] = a[x][y][h]*b[x][y][h];
 				}
@@ -277,13 +234,13 @@ public class Localizer implements EstimatorInterface {
 	// The transition matrix for the problem. Format: T["oldPos"]["newPos"]
 	private double[][][][][][] generateT(){
 		double[][][][][][] t = new double[rows][cols][head][rows][cols][head];
-		for(int x = 0; x < cols; x++){
-			for(int y = 0; y < rows; y++){
+		for(int x = 0; x < rows; x++){
+			for(int y = 0; y < cols; y++){
 				for(int h = 0; h < head; h++){
-					for(int nX = 0; nX < cols; nX++){
-						for(int nY = 0; nY < rows; nY++){
+					for(int nX = 0; nX < rows; nX++){
+						for(int nY = 0; nY < cols; nY++){
 							for(int nH = 0; nH < head; nH++){
-								t[x][y][h][nX][nY][nH] = getTProb(x, y, h, nX, nY, nH);
+								t[x][y][h][nX][nY][nH] = calcTProb(x, y, h, nX, nY, nH);
 							}
 						}
 					}
@@ -292,12 +249,76 @@ public class Localizer implements EstimatorInterface {
 		}
 		return t;
 	}
+	
+	private double calcTProb(int x, int y, int h, int nX, int nY, int nH){
+		//Must move
+		if(x == nX && y == nY) return 0.0;
 
+		// Entered a wall
+		if (!allowedPos(nX,nY)) return 0.0;
+
+		// Checks if the new direction correctly correlates to new coords
+		int deltaX = 0, deltaY = 0;
+		switch (nH) {
+			case (NORTH) : 
+				deltaX = -1;
+				break;
+			case (EAST) : 
+				deltaY = 1;
+				break;
+			case (SOUTH) : 
+				deltaX = 1;
+				break;
+			case (WEST) : 
+				deltaY = -1;
+				break;
+		}
+		if(x + deltaX != nX || y + deltaY != nY) return 0.0;
+		
+		//It is now established that nX,nY,nH is a possible state
+		if(h == nH){
+			return 0.7;
+		} else {
+			if(!nextIsWall(x,y,h)) return 0.3/(head-1-countWalls(x,y));
+			else{
+				return 1.0/(head-countWalls(x,y));
+			}
+		}
+	}
+	
+	private int countWalls(int x, int y){
+		int walls = 0;
+		if(!allowedPos(x+1,y)) walls++;
+		if(!allowedPos(x-1,y)) walls++;
+		if(!allowedPos(x,y+1)) walls++;
+		if(!allowedPos(x,y-1)) walls++;
+		return walls;
+	}
+	
+	private boolean nextIsWall(int x, int y, int h) {
+		int deltaX = 0, deltaY = 0;
+		switch (h) {
+			case (NORTH) : 
+				deltaX = -1;
+				break;
+			case (EAST) : 
+				deltaY = 1;
+				break;
+			case (SOUTH) : 
+				deltaX = 1;
+				break;
+			case (WEST) : 
+				deltaY = -1;
+				break;
+		}
+		return (x+deltaX < 0 || x+deltaX >= rows || y+deltaY < 0 || y+deltaY >= cols);
+	}
+	
 	//o contains the probabilities of states based on a reading (stored in ev).
 	private double[][] generateO(int rX, int rY){
-		double[][] o = new double[cols][rows];
-		for(int i = 0; i < cols; i++){
-			for(int j = 0; j < rows; j++){
+		double[][] o = new double[rows][cols];
+		for(int i = 0; i < rows; i++){
+			for(int j = 0; j < cols; j++){
 				// Can be interpreted as P(reading [rX, rY] | [x,y])
 				o[i][j] = getOrXY(rX, rY, i, j);
 			}
