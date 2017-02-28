@@ -121,7 +121,7 @@ public class Localizer implements EstimatorInterface {
 		for(int x = 0; x < rows; x++){
 			for(int y = 0; y < cols; y++){
 				for(int h = 0; h < head; h++){
-					prior[x][y][h] = 1/(cols + rows + head);
+					prior[x][y][h] = 1.0/(cols + rows + head);
 				}
 			}
 		}
