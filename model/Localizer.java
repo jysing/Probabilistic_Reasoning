@@ -106,21 +106,14 @@ public class Localizer implements EstimatorInterface {
 			for(int i = -2; i <= 2; i++){
 				for(int j = -2; j <= 2; j++){
 					if(allowedPos(x+i, y+j)){
-						if(Math.abs(i) == 2 || Math.abs(j) == 2){
-							prob-= pn2;
-						}
-						else if(Math.abs(i) == 1 || Math.abs(j) == 1){
-							prob =- pn1;
-						}
-						else{ 	//i = j = 0
-							prob -= ploc;
-						}
+						if(Math.abs(i) == 2 || Math.abs(j) == 2) prob -= pn2;
+						else if(Math.abs(i) == 1 || Math.abs(j) == 1) prob -= pn1;
+						else prob -= ploc;
 					}
 				}
 			}
 		return prob;
-		}
-		else{
+		} else {
 			if(Math.abs(rX - x) > 2 || Math.abs(rY - y) > 2) return 0.0;
 			else if(Math.abs(rX - x) == 2 || Math.abs(rY - y) == 2) return pn2;
 			else if(Math.abs(rX - x) == 1 || Math.abs(rY - y) == 1) return pn1;
@@ -194,7 +187,7 @@ public class Localizer implements EstimatorInterface {
 			}
 		}
 
-		for(int i = ev.size()-1; i >= 1; i--){
+		for(int i = ev.size()-1; i >= 0; i--){
 			double[][][] newS = multStates(fv.get(i+1), b);
 			newS = normalize(newS);
 			sv.add(0, newS);
