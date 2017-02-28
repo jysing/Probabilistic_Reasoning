@@ -29,7 +29,7 @@ public class Localizer implements EstimatorInterface {
 		for (int i = 0; i < cols; i++) {
 			for (int j = 0; j < rows; j++) {
 				for (int k = 0; k < head; k++) {
-					state[i][j][k] = 1.0/(rows+cols+head);
+					state[i][j][k] = 1.0/(rows*cols*head);
 				}
 			}
 		}
