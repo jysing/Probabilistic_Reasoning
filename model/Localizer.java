@@ -104,7 +104,7 @@ public class Localizer implements EstimatorInterface {
 		ArrayList<double[][][]> sv = forwardBackward();
 		state = sv.get(0);
 		int error = manhattanDistance();
-		// This system print makes it easy to import values into a matlab/python plot...
+		// This system print makes it easy to import values into a matlab/python plot
 		System.out.print(error + " ");
 	}
 
@@ -171,6 +171,7 @@ public class Localizer implements EstimatorInterface {
 	//Should (fingers crossed) implement 15.12
 	private double[][][] forward(double[][][] oldF, double[][] o){
 		double[][][] newF = new double[rows][cols][head];
+		double alpha = 0.05;
 		for(int x = 0; x < rows; x++){
 			for(int y = 0; y < cols; y++){
 				for(int h = 0; h < head; h++){
@@ -179,7 +180,8 @@ public class Localizer implements EstimatorInterface {
 					for(int nX = 0; nX < rows; nX++){
 						for(int nY = 0; nY < cols; nY++){
 							for(int nH = 0; nH < head; nH++){
-								newF[x][y][h] += oldF[x][y][h]*o[x][y]*t[x][y][h][nX][nY][nH];
+								// t transposed
+								newF[x][y][h] += alpha*o[x][y]*t[nX][nY][nH][x][y][h]*oldF[x][y][h];
 							}
 						}
 					}
@@ -334,11 +336,9 @@ public class Localizer implements EstimatorInterface {
 		for(int i = 0; i < rows; i++){
 			for(int j = 0; j < cols; j++){
 				// Can be interpreted as P(reading [rX, rY] | [x,y])
-				o[i][j] = getOrXY(rX, rY, i, j);
+				o[i][j] = getOrXY(rX, rY, i, j)/head;
 			}
 		}
 		return o;
 	}
-
-	//forward-backward (page 576)
 }
