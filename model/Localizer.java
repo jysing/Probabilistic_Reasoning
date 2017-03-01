@@ -22,7 +22,6 @@ public class Localizer implements EstimatorInterface {
 		this.cols = cols;
 		this.head = head;
 
-		//Arbitrary start position as of now
 		rob = new RobotSim(rows, cols, head);
 
 		state = new double[rows][cols][head];
@@ -35,7 +34,7 @@ public class Localizer implements EstimatorInterface {
 		}
 
 		Random rand = new Random();
-		currentDirection = rand.nextInt(4);
+		currentDirection = rand.nextInt(head);
 
 		t = generateT();
 		ev = new ArrayList<int[]>();
@@ -104,7 +103,26 @@ public class Localizer implements EstimatorInterface {
 		ev.add(rob.getCurrentReading());
 		ArrayList<double[][][]> sv = forwardBackward();
 		state = sv.get(0);
-		// calcuate manhattan distance
+		int error = manhattanDistance();
+		// This system print makes it easy to import values into a matlab/python plot...
+		System.out.print(error + " ");
+	}
+
+	private int manhattanDistance() {
+		int[] truePos = getCurrentTruePosition();
+		int[] estPos = new int[2]; 
+		double highestProb = 0;
+		for (int i = 0; i < cols; i++) {
+			for (int j = 0; j < rows; j++) {
+				double currProb = getCurrentProb(i, j);
+				if (currProb > highestProb) {
+					highestProb = currProb;
+					estPos[0] = i;
+					estPos[1] = j;
+				}
+			}
+		}
+		return (Math.abs(truePos[0]-estPos[0]) + Math.abs(truePos[1]-estPos[1]));
 	}
 
 	private ArrayList<double[][][]> forwardBackward(){
