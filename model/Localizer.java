@@ -100,7 +100,7 @@ public class Localizer implements EstimatorInterface {
 
 	public void update() {
 		rob.move();
-		ev.add(rob.getCurrentReading());
+		ev.add(getCurrentReading());
 		ArrayList<double[][][]> sv = forwardBackward();
 		state = sv.get(0);
 		int error = manhattanDistance();

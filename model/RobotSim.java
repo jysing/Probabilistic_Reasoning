@@ -14,6 +14,7 @@ public class RobotSim {
 	private int cols;
 	private int head;
 	private Random rngGen;
+	private int[] currentReading;
 	//SOUTH: +x; EAST: +y
 	private final int NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3;
 	private final double ploc = 0.1, pn1 = 0.05, pn2 = 0.025;
@@ -22,6 +23,7 @@ public class RobotSim {
 		this.rows = rows;
 		this.cols = cols;
 		this.head = head;
+		currentReading = new int[2];
 		rngGen = new Random();
 		x = rngGen.nextInt(cols);
 		y = rngGen.nextInt(rows);
@@ -37,7 +39,7 @@ public class RobotSim {
 		return pos;
 	}
 
-	public int[] getCurrentReading() {
+	public int[] calcCurrentReading() {
 		double rng = rngGen.nextDouble();
 		double addRng = 0;
 		int[] reading = new int[2];
@@ -67,6 +69,10 @@ public class RobotSim {
 		reading[1] = -1;
 		return reading;
 	}
+	
+	public int[] getCurrentReading(){
+		return currentReading;
+	}
 
 	private boolean allowedPos(int x, int y){
 		return (x >= 0 && y >= 0 && x < rows && y < cols);
@@ -75,6 +81,7 @@ public class RobotSim {
 	public void move() {
 		updateDirection();
 		makeMove();
+		currentReading = calcCurrentReading();
 	}
 
 	private boolean wallAhead(){
