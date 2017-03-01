@@ -23,7 +23,7 @@ public class Localizer implements EstimatorInterface {
 		this.head = head;
 
 		//Arbitrary start position as of now
-		rob = new RobotSim(rows, cols, head, 1, 1, EAST);
+		rob = new RobotSim(rows, cols, head);
 
 		state = new double[rows][cols][head];
 		for (int i = 0; i < rows; i++) {
@@ -99,15 +99,10 @@ public class Localizer implements EstimatorInterface {
 		return prob;
 	}
 
-	// todo
 	public void update() {
-		System.out.println("1");
 		rob.move();
-		System.out.println("2");
 		ev.add(rob.getCurrentReading());
-		System.out.println("3");
 		ArrayList<double[][][]> sv = forwardBackward();
-		System.out.println("4");
 		state = sv.get(0);
 		// calcuate manhattan distance
 	}
@@ -182,6 +177,7 @@ public class Localizer implements EstimatorInterface {
 		for(int x = 0; x < rows; x++){
 			for(int y = 0; y < cols; y++){
 				for(int h = 0; h < head; h++){
+					newB[x][y][h] = 0;
 					//Sum up all probability terms for state [x,y,h]
 					for(int nX = 0; nX < rows; nX++){
 						for(int nY = 0; nY < cols; nY++){

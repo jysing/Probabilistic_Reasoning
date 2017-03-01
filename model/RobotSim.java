@@ -18,14 +18,16 @@ public class RobotSim {
 	private final int NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3;
 	private final double ploc = 0.1, pn1 = 0.05, pn2 = 0.025;
 
-	public RobotSim(int rows, int cols, int head, int x, int y, int h){
+	public RobotSim(int rows, int cols, int head){
 		this.rows = rows;
 		this.cols = cols;
 		this.head = head;
-		this.x = x;
-		this.y = y;
-		this.h = h;
 		rngGen = new Random();
+		x = rngGen.nextInt(cols);
+		y = rngGen.nextInt(rows);
+		do{
+			h = rngGen.nextInt(4);
+		}while(wallAhead());
 	}
 
 	public int[] getCurrentPos() {
@@ -86,11 +88,10 @@ public class RobotSim {
 			case WEST:
 				return !allowedPos(x, y - 1);
 			//Undefined behaviour
-			default: return false;
+			default: return true;
 		}
 	}
 
-	//nextInt(4) gives possible values 0,1,2,3
 	private void updateDirection(){
 		if(wallAhead()){
 			do{
