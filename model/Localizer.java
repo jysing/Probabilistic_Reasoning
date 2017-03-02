@@ -13,14 +13,17 @@ public class Localizer implements EstimatorInterface {
 	private int currentDirection;
 	private RobotSim rob;
 	private double[][][] state;
+	private int totRealError;
 	private double[][][][][][] t;
 	// Not pretty using ArrayList here, but practical. Ev here is all readings.
 	private ArrayList<int[]> ev;
+	private ArrayList<int[]> realPos;
 
 	public Localizer( int rows, int cols, int head) {
 		this.rows = rows;
 		this.cols = cols;
 		this.head = head;
+		totRealError = 0;
 
 		rob = new RobotSim(rows, cols, head);
 
@@ -38,6 +41,7 @@ public class Localizer implements EstimatorInterface {
 
 		t = generateT();
 		ev = new ArrayList<int[]>();
+		realPos = new ArrayList<int[]>();
 	}
 
 	public int getNumRows() {
@@ -102,16 +106,26 @@ public class Localizer implements EstimatorInterface {
 		rob.move();
 		//ev is ordered with readings in chronological order, i.e. latest is last
 		ev.add(getCurrentReading());
+		realPos.add(getCurrentTruePosition());
 		ArrayList<double[][][]> sv = forwardBackward();
 		//sv is ordered with predictions in chronological order, i.e. latest is last
+		int accError = 0;
+		for(int i = 0; i < realPos.size(); i++){
+			state = sv.get(i);
+			int error = manhattanDistance(realPos.get((i)));
+			accError += error;
+			if(i == realPos.size()-1) System.out.println("Latest error: " + error);
+		}
+		System.out.println("Round: " + ev.size());
+		System.out.println("Average error (retroactively): " + (double)accError/realPos.size());
 		state = sv.get(sv.size()- 1);
-		int error = manhattanDistance();
+		totRealError += manhattanDistance(getCurrentTruePosition());
+		System.out.println("Average error (relevant): " + (double)totRealError/realPos.size());
 		// This system print makes it easy to import values into a matlab/python plot
-		System.out.print(error + " ");
+		//System.out.print(error + " ");
 	}
 
-	private int manhattanDistance() {
-		int[] truePos = getCurrentTruePosition();
+	private int manhattanDistance(int[] truePos) {
 		int[] estPos = new int[2]; 
 		double highestProb = 0;
 		for (int i = 0; i < cols; i++) {
