@@ -181,13 +181,7 @@ public class Localizer implements EstimatorInterface {
 							for(int nH = 0; nH < head; nH++){
 								// T[start:"row"][end:"column"], O(reading| [x,y]), f = prob(at (x,y,h))
 								//Here on out we do the matrix computation
-								for(int mX = 0; mX < rows; mX++){
-									for(int mY = 0; mY < cols; mY++){
-										for(int mH = 0; mH < head; mH++){
-											newF[x][y][h] += t[nX][nY][nH][x][y][h]*o[x][y]*oldF[mX][mY][mH];
-										}
-									}
-								}
+								newF[x][y][h] += o[x][y]*t[nX][nY][nH][x][y][h]*oldF[nX][nY][nH];
 							}
 						}
 					}
@@ -210,13 +204,7 @@ public class Localizer implements EstimatorInterface {
 					for(int nX = 0; nX < rows; nX++){
 						for(int nY = 0; nY < cols; nY++){
 							for(int nH = 0; nH < head; nH++){
-								for(int mX = 0; mX < rows; mX++){
-									for(int mY = 0; mY < cols; mY++){
-										for(int mH = 0; mH < head; mH++){
-											newB[x][y][h] += t[nX][nY][nH][x][y][h]*o[x][y]*oldB[mX][mY][mH];
-										}
-									}
-								}
+								newB[x][y][h] += t[x][y][h][nX][nY][nH]*o[x][y]*oldB[nX][nY][nH];
 							}
 						}
 					}
