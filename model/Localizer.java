@@ -102,7 +102,7 @@ public class Localizer implements EstimatorInterface {
 		rob.move();
 		ev.add(getCurrentReading());
 		ArrayList<double[][][]> sv = forwardBackward();
-		state = sv.get(0);
+		state = sv.get(sv.size()- 1);
 		int error = manhattanDistance();
 		// This system print makes it easy to import values into a matlab/python plot
 		System.out.print(error + " ");
@@ -134,7 +134,7 @@ public class Localizer implements EstimatorInterface {
 		for(int x = 0; x < rows; x++){
 			for(int y = 0; y < cols; y++){
 				for(int h = 0; h < head; h++){
-					prior[x][y][h] = 1.0/(cols + rows + head);
+					prior[x][y][h] = 1.0/(cols*rows*head);
 				}
 			}
 		}
@@ -171,7 +171,6 @@ public class Localizer implements EstimatorInterface {
 	//Should (fingers crossed) implement 15.12
 	private double[][][] forward(double[][][] oldF, double[][] o){
 		double[][][] newF = new double[rows][cols][head];
-		double alpha = 0.05;
 		for(int x = 0; x < rows; x++){
 			for(int y = 0; y < cols; y++){
 				for(int h = 0; h < head; h++){
@@ -180,14 +179,23 @@ public class Localizer implements EstimatorInterface {
 					for(int nX = 0; nX < rows; nX++){
 						for(int nY = 0; nY < cols; nY++){
 							for(int nH = 0; nH < head; nH++){
-								// t transposed
-								newF[x][y][h] += alpha*o[x][y]*t[nX][nY][nH][x][y][h]*oldF[x][y][h];
+								// T[start:"row"][end:"column"], O(reading| [x,y]), f = prob(at (x,y,h))
+								//Here on out we do the matrix computation
+								for(int mX = 0; mX < rows; mX++){
+									for(int mY = 0; mY < cols; mY++){
+										for(int mH = 0; mH < head; mH++){
+											newF[x][y][h] += t[nX][nY][nH][x][y][h]*o[x][y]*oldF[mX][mY][mH];
+										}
+									}
+								}
 							}
 						}
 					}
 				}
 			}
 		}
+		//The alpha in the algorithm is for normalization (I think)
+		newF = normalize(newF);
 		return newF;
 	}
 
@@ -202,8 +210,13 @@ public class Localizer implements EstimatorInterface {
 					for(int nX = 0; nX < rows; nX++){
 						for(int nY = 0; nY < cols; nY++){
 							for(int nH = 0; nH < head; nH++){
-								//Unsure if this is the correct iteration over t (see formula 15.13)
-								newB[x][y][h] += t[x][y][h][nX][nY][nH]*o[x][y]*oldB[x][y][h];
+								for(int mX = 0; mX < rows; mX++){
+									for(int mY = 0; mY < cols; mY++){
+										for(int mH = 0; mH < head; mH++){
+											newB[x][y][h] += t[nX][nY][nH][x][y][h]*o[x][y]*oldB[mX][mY][mH];
+										}
+									}
+								}
 							}
 						}
 					}
@@ -332,6 +345,7 @@ public class Localizer implements EstimatorInterface {
 	
 	//o contains the probabilities of states based on a reading (stored in ev).
 	private double[][] generateO(int rX, int rY){
+		//System.out.println("rX = " + rX + " rY = " + rY);
 		double[][] o = new double[rows][cols];
 		for(int i = 0; i < rows; i++){
 			for(int j = 0; j < cols; j++){
@@ -340,5 +354,19 @@ public class Localizer implements EstimatorInterface {
 			}
 		}
 		return o;
+	}
+	
+	//Only used for debugging
+	private void printData(double[][][] a){
+		String s = "";
+		for(int i = 0; i < rows; i++){
+			for(int j = 0; j < cols; j++){
+				s += a[i][j][0]+a[i][j][1]+a[i][j][2]+a[i][j][3];
+				s += " ";
+			}
+			s+= "\n";
+		}
+			s += "\n";
+			System.out.print(s);
 	}
 }
