@@ -100,8 +100,10 @@ public class Localizer implements EstimatorInterface {
 
 	public void update() {
 		rob.move();
+		//ev is ordered with readings in chronological order, i.e. latest is last
 		ev.add(getCurrentReading());
 		ArrayList<double[][][]> sv = forwardBackward();
+		//sv is ordered with predictions in chronological order, i.e. latest is last
 		state = sv.get(sv.size()- 1);
 		int error = manhattanDistance();
 		// This system print makes it easy to import values into a matlab/python plot
@@ -333,7 +335,6 @@ public class Localizer implements EstimatorInterface {
 	
 	//o contains the probabilities of states based on a reading (stored in ev).
 	private double[][] generateO(int rX, int rY){
-		//System.out.println("rX = " + rX + " rY = " + rY);
 		double[][] o = new double[rows][cols];
 		for(int i = 0; i < rows; i++){
 			for(int j = 0; j < cols; j++){
