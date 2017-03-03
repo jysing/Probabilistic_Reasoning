@@ -13,17 +13,13 @@ public class Localizer implements EstimatorInterface {
 	private int currentDirection;
 	private RobotSim rob;
 	private double[][][] state;
-	private int totRealError;
 	private double[][][][][][] t;
-	// Not pretty using ArrayList here, but practical. Ev here is all readings.
 	private ArrayList<int[]> ev;
-	private ArrayList<int[]> realPos;
 
 	public Localizer( int rows, int cols, int head) {
 		this.rows = rows;
 		this.cols = cols;
 		this.head = head;
-		totRealError = 0;
 
 		rob = new RobotSim(rows, cols, head);
 
@@ -41,7 +37,6 @@ public class Localizer implements EstimatorInterface {
 
 		t = generateT();
 		ev = new ArrayList<int[]>();
-		realPos = new ArrayList<int[]>();
 	}
 
 	public int getNumRows() {
@@ -106,26 +101,15 @@ public class Localizer implements EstimatorInterface {
 		rob.move();
 		//ev is ordered with readings in chronological order, i.e. latest is last
 		ev.add(getCurrentReading());
-		realPos.add(getCurrentTruePosition());
 		ArrayList<double[][][]> sv = forwardBackward();
 		//sv is ordered with predictions in chronological order, i.e. latest is last
-		int accError = 0;
-		for(int i = 0; i < realPos.size(); i++){
-			state = sv.get(i);
-			int error = manhattanDistance(realPos.get((i)));
-			accError += error;
-			if(i == realPos.size()-1) System.out.println("Latest error: " + error);
-		}
-		System.out.println("Round: " + ev.size());
-		System.out.println("Average error (retroactively): " + (double)accError/realPos.size());
 		state = sv.get(sv.size()- 1);
-		totRealError += manhattanDistance(getCurrentTruePosition());
-		System.out.println("Average error (relevant): " + (double)totRealError/realPos.size());
-		// This system print makes it easy to import values into a matlab/python plot
-		//System.out.print(error + " ");
+		int error = manhattanDistance();
+		System.out.print(error + " ");
 	}
 
-	private int manhattanDistance(int[] truePos) {
+	private int manhattanDistance() {
+		int[] truePos = getCurrentTruePosition();
 		int[] estPos = new int[2]; 
 		double highestProb = 0;
 		for (int i = 0; i < cols; i++) {
@@ -162,26 +146,26 @@ public class Localizer implements EstimatorInterface {
 			double[][][] newF = forward(fv.get(i), o);
 			fv.add(newF);
 		}
-
+		return fv;
 		//Initial values in b should be set to one according to algorithm
-		double[][][] b = new double[rows][cols][head];
-		for(int x = 0; x < rows; x++){
-			for(int y = 0; y < cols; y++){
-				for(int h = 0; h < head; h++){
-					b[x][y][h] = 1;
-				}
-			}
-		}
+		//double[][][] b = new double[rows][cols][head];
+		//for(int x = 0; x < rows; x++){
+		//	for(int y = 0; y < cols; y++){
+		//		for(int h = 0; h < head; h++){
+		//			b[x][y][h] = 1;
+		//		}
+		//	}
+		//}
 
-		for(int i = ev.size()-1; i >= 0; i--){
-			double[][][] newS = multStates(fv.get(i+1), b);
-			newS = normalize(newS);
-			sv.add(0, newS);
-			int[] currentE = ev.get(i);
-			double[][] o = generateO(currentE[0], currentE[1]);
-			b = backward(b, o);
-		}
-		return sv;
+		//for(int i = ev.size()-1; i >= 0; i--){
+		//	double[][][] newS = multStates(fv.get(i+1), b);
+		//	newS = normalize(newS);
+		//	sv.add(0, newS);
+		//	int[] currentE = ev.get(i);
+		//	double[][] o = generateO(currentE[0], currentE[1]);
+		//	b = backward(b, o);
+		//}
+		//return sv;
 	}
 
 	//Should (fingers crossed) implement 15.12
@@ -196,7 +180,6 @@ public class Localizer implements EstimatorInterface {
 						for(int nY = 0; nY < cols; nY++){
 							for(int nH = 0; nH < head; nH++){
 								// T[start:"row"][end:"column"], O(reading| [x,y]), f = prob(at (x,y,h))
-								//Here on out we do the matrix computation
 								newF[x][y][h] += o[x][y]*t[nX][nY][nH][x][y][h]*oldF[nX][nY][nH];
 							}
 						}
@@ -204,31 +187,30 @@ public class Localizer implements EstimatorInterface {
 				}
 			}
 		}
-		//The alpha in the algorithm is for normalization (I think)
 		newF = normalize(newF);
 		return newF;
 	}
 
 	//Should implement 15.13
-	private double[][][] backward(double[][][] oldB, double[][] o){
-		double[][][] newB = new double[rows][cols][head];
-		for(int x = 0; x < rows; x++){
-			for(int y = 0; y < cols; y++){
-				for(int h = 0; h < head; h++){
-					newB[x][y][h] = 0;
-					//Sum up all probability terms for state [x,y,h]
-					for(int nX = 0; nX < rows; nX++){
-						for(int nY = 0; nY < cols; nY++){
-							for(int nH = 0; nH < head; nH++){
-								newB[x][y][h] += t[x][y][h][nX][nY][nH]*o[x][y]*oldB[nX][nY][nH];
-							}
-						}
-					}
-				}
-			}
-		}
-		return newB;
-	}
+	//private double[][][] backward(double[][][] oldB, double[][] o){
+	//	double[][][] newB = new double[rows][cols][head];
+	//	for(int x = 0; x < rows; x++){
+	//		for(int y = 0; y < cols; y++){
+	//			for(int h = 0; h < head; h++){
+	//				newB[x][y][h] = 0;
+	//				//Sum up all probability terms for state [x,y,h]
+	//				for(int nX = 0; nX < rows; nX++){
+	//					for(int nY = 0; nY < cols; nY++){
+	//						for(int nH = 0; nH < head; nH++){
+	//							newB[x][y][h] += t[x][y][h][nX][nY][nH]*o[x][y]*oldB[nX][nY][nH];
+	//						}
+	//					}
+	//				}
+	//			}
+	//		}
+	//	}
+	//	return newB;
+	//}
 
 	//Normalizes entries in a probability data structure
 	private double[][][] normalize(double[][][] a){
@@ -263,8 +245,7 @@ public class Localizer implements EstimatorInterface {
 		return ret;
 	}
 
-	//Looks horrendous and is not a matrix, hopefully works. Gets generated once.
-	// The transition matrix for the problem. Format: T["oldPos"]["newPos"]
+	//Format: T["oldPos"]["newPos"]
 	private double[][][][][][] generateT(){
 		double[][][][][][] t = new double[rows][cols][head][rows][cols][head];
 		for(int x = 0; x < rows; x++){
@@ -360,16 +341,16 @@ public class Localizer implements EstimatorInterface {
 	}
 	
 	//Only used for debugging
-	private void printData(double[][][] a){
-		String s = "";
-		for(int i = 0; i < rows; i++){
-			for(int j = 0; j < cols; j++){
-				s += a[i][j][0]+a[i][j][1]+a[i][j][2]+a[i][j][3];
-				s += " ";
-			}
-			s+= "\n";
-		}
-			s += "\n";
-			System.out.print(s);
-	}
+	//private void printData(double[][][] a){
+	//	String s = "";
+	//	for(int i = 0; i < rows; i++){
+	//		for(int j = 0; j < cols; j++){
+	//			s += a[i][j][0]+a[i][j][1]+a[i][j][2]+a[i][j][3];
+	//			s += " ";
+	//		}
+	//		s+= "\n";
+	//	}
+	//		s += "\n";
+	//		System.out.print(s);
+	//}
 }

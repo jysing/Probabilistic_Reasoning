@@ -64,7 +64,6 @@ public class RobotSim {
 			}
 		}
 		//If addRng >= rng never is satisfied, then we get a "Nothing" reading
-		//Never under any circumstances return null!
 		reading[0] = -1;
 		reading[1] = -1;
 		return reading;
